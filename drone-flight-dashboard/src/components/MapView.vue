@@ -51,8 +51,11 @@
   </template>
   
   <script>
-  import { map } from 'leaflet'
-  import { tileLayer } from 'leaflet'
+  import L from 'leaflet'
+  import maplibregl from 'maplibre-gl'
+  import '@maplibre/maplibre-gl-leaflet'
+  import 'leaflet/dist/leaflet.css'
+  import 'maplibre-gl/dist/maplibre-gl.css'
   
   export default {
     name: 'MapView',
@@ -116,11 +119,48 @@
     },
     methods: {
       initMap() {
-        // Инициализация карты Leaflet
-        this.map = L.map('map').setView([55.7558, 37.6173], 5) // Центр на Москву, масштаб для России
-  
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors'
+        // Инициализация карты Leaflet + MapLibre (локальные MVT-тайлы)
+        this.map = L.map('map').setView([55.7558, 37.6173], 5) // Центр на Москву
+
+        const style = {
+          version: 8,
+          sources: {
+            rf: {
+              type: 'vector',
+              tiles: [
+                'http://localhost:8080/tiles/{z}/{x}/{y}.mvt'
+              ],
+              minzoom: 0,
+              maxzoom: 14
+            }
+          },
+          layers: [
+            {
+              id: 'rf-fill',
+              type: 'fill',
+              source: 'rf',
+              'source-layer': 'regions',
+              paint: {
+                'fill-color': '#cfe3ff',
+                'fill-opacity': 0.6
+              }
+            },
+            {
+              id: 'rf-outline',
+              type: 'line',
+              source: 'rf',
+              'source-layer': 'regions',
+              paint: {
+                'line-color': '#3777ff',
+                'line-width': 1
+              }
+            }
+          ]
+        }
+
+        L.maplibreGL({
+          style,
+          maplibreGL: maplibregl
         }).addTo(this.map)
   
         // Добавление маркеров для регионов
@@ -194,7 +234,8 @@
     background: white;
     border-radius: 12px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
+    overflow: hidden;    /* Явная высота: позволяет вложенному .map-wrapper и .map занимать место */
+    height: calc(100vh - 120px);
   }
   
   .section-title {
@@ -214,6 +255,7 @@
     height: 100%;
     width: 100%;
     border-radius: 0 0 12px 12px;
+    min-height: 400px; /* запасной вариант */
   }
   
   .subjects-panel {

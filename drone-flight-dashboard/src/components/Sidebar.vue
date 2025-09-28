@@ -19,6 +19,12 @@
             <span>Доска</span>
           </a>
         </li>
+        <li class="nav-item" :class="{ active: currentView === 'topography' }">
+          <a href="#" class="nav-link" @click.prevent="$emit('view-change', 'topography')">
+            <img class="secondary-image" :src="pin" alt="Pin icon" />
+            <span>Топография</span>
+          </a>
+        </li>
         <li class="nav-item" :class="{ active: currentView === 'analytics' }">
           <a href="#" class="nav-link" @click.prevent="$emit('view-change', 'analytics')">
             <img class="secondary-image" :src="diagram" alt="Diagram icon" />
