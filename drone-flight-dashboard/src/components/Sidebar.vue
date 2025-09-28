@@ -25,12 +25,6 @@
             <span>Аналитика</span>
           </a>
         </li>
-        <li class="nav-item">
-          <a href="#" class="nav-link">
-            <img class="secondary-image" :src="earth" alt="Earth icon" />
-            <span>Топография</span>
-          </a>
-        </li>
       </ul>
     </nav>
 
@@ -128,7 +122,7 @@
 
 .sidebar-nav {
   flex: 1;
-  padding: 16px 0;
+  padding: 5px 0;
 }
 
 .nav-list {

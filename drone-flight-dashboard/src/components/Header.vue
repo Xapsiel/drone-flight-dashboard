@@ -53,12 +53,11 @@ export default {
 .header {
   background-color: #ffffff;
   padding: 1rem 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  height: 60px;
+  height: 80px;
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1610px;
   margin: 0 auto;
   padding: 0 1rem;
   display: flex;
@@ -77,8 +76,8 @@ export default {
   display: flex;
   align-items: center;
   flex-grow: 1;
-  max-width: 700px;
-  margin: 0 5rem;
+  max-width: 900px;
+  margin: 0 13rem;
 }
 
 .search-input-wrapper {
@@ -113,7 +112,7 @@ export default {
 .user-container {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 2rem;
 }
 
 .nickname {
