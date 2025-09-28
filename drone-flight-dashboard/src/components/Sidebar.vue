@@ -154,7 +154,7 @@
 }
 
 .nav-item.active .nav-link {
-  background-color: #636569;
+  background-color: #b8b8b8;
   color: white;
 }
 
