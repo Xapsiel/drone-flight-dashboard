@@ -57,7 +57,7 @@ class AuthService {
       
       const response = await axios.get('/user/gen_auth_url')
       console.log('🌐 [getAuthURL] Ответ от сервера:', response.status, response.data)
-      return response.data.res
+      return response.data.data.auth_url
     } catch (error) {
       console.error('❌ [getAuthURL] Ошибка получения URL аутентификации:', error)
       console.error('❌ [getAuthURL] Статус ошибки:', error.response?.status)

@@ -13,6 +13,8 @@
         </header>
 
         <main class="content">
+          <MapView v-if="currentView === 'dashboard'" />
+          <TopoMap v-else-if="currentView === 'topography'" />
           <AdminPage v-else-if="currentView === 'admin'" />
         </main>
       </div>
@@ -30,6 +32,8 @@
 import { ref, computed, onMounted } from 'vue'
 import Header from './components/Header.vue'
 import Sidebar from './components/Sidebar.vue'
+import MapView from './components/MapView.vue'
+import TopoMap from './components/TopoMap.vue'
 import AdminPage from './components/AdminPage.vue'
 import LoginPage from './components/LoginPage.vue'
 import authService from './services/auth.js'
