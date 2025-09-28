@@ -128,7 +128,7 @@
             rf: {
               type: 'vector',
               tiles: [
-                'http://localhost:8080/tiles/{z}/{x}/{y}.mvt'
+                '/tiles/{z}/{x}/{y}.mvt'
               ],
               minzoom: 0,
               maxzoom: 14

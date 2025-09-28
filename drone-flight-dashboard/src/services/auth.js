@@ -40,6 +40,16 @@ class AuthService {
     } else {
       console.log('🔧 Токен не найден')
     }
+
+    // Глобальный перехватчик: добавляет токен в заголовки для всех axios-запросов
+    axios.interceptors.request.use((config) => {
+      const token = localStorage.getItem('auth_token')
+      if (token) {
+        config.headers = config.headers || {}
+        config.headers['Authorization'] = `Bearer ${token}`
+      }
+      return config
+    })
     
     console.log('🔧 AuthService инициализирован:', {
       hasToken: !!this.token,

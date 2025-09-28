@@ -137,6 +137,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import axios from 'axios'
 
 // Реактивные данные
 const selectedFiles = ref([])
@@ -235,12 +236,18 @@ const uploadFiles = async () => {
       const formData = new FormData()
       formData.append('file', file)
       formData.append('authorID',1)
-      const response = await fetch(`http://localhost:8080/crawler/upload`, {
-        method: 'POST',
-        body: formData
-      })
-      if (!response.ok) {
-        throw new Error(`Ошибка загрузки файла ${file.name}`)
+          const token = localStorage.getItem('auth_token')
+          if (!token) {
+            throw new Error('Токен авторизации отсутствует')
+          }
+      try {
+        await axios.post(`http://localhost:8080/crawler/upload`, formData, {
+          withCredentials: true
+        })
+      } catch (error) {
+        const status = error.response?.status
+        const statusText = error.response?.statusText || error.message
+        throw new Error(`Ошибка загрузки файла ${file.name}: ${status || ''} ${statusText || ''}`)
       }
     }
     alert(`Успешно загружено ${selectedFiles.value.length} файлов`)

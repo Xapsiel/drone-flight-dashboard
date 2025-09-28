@@ -8,6 +8,7 @@
 </template>
 
 <script>
+import axios from 'axios'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
@@ -138,19 +139,18 @@ export default {
         const x = Math.floor(((center.lng + 180) / 360) * n)
         const y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n)
         const url = `http://localhost:8080/tiles/${zoom}/${x}/${y}.mvt`
-        fetch(url)
+        axios.get(url, { responseType: 'arraybuffer', withCredentials: true })
           .then(res => {
-            if (!res.ok) throw new Error('Tile failed: ' + res.status)
-            return res.arrayBuffer()
-          })
-          .then(buf => {
-            if (buf.byteLength === 0) {
+            const buf = res.data
+            if (!buf || buf.byteLength === 0) {
               this.error = 'MVT-тайл пуст. Проверьте source-layer.'
               setTimeout(() => { this.error = '' }, 8000)
             }
           })
           .catch(err => {
-            this.error = 'Не удалось загрузить MVT-тайл: ' + err.message
+            const status = err.response?.status
+            const message = err.message || 'unknown'
+            this.error = `Не удалось загрузить MVT-тайл: ${status ? status + ' ' : ''}${message}`
             setTimeout(() => { this.error = '' }, 8000)
           })
       } catch (e) {
