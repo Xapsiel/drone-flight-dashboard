@@ -19,33 +19,21 @@
         </div>
         
         <div class="user-container">
-          <span class="nickname">Денис Иващенко</span>
-          <img 
-            :src="userIcon" 
-            alt="User icon" 
-            class="user-icon"
-          />
+          <UserMenu />
         </div>
       </div>
     </div>
   </header>
 </template>
 
-<script>
-export default {
-  name: 'Header',
-  data() {
-    return {
-      searchQuery: '',
-      nickname: 'Денис Иващенко',
-      userIcon: 'https://via.placeholder.com/40'
-    }
-  },
-  methods: {
-    handleSearch() {
-      console.log('Search query:', this.searchQuery)
-    }
-  }
+<script setup>
+import { ref } from 'vue'
+import UserMenu from './UserMenu.vue'
+
+const searchQuery = ref('')
+
+const handleSearch = () => {
+  console.log('Search query:', searchQuery.value)
 }
 </script>
 
