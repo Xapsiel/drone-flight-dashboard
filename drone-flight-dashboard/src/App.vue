@@ -13,46 +13,60 @@
         </header>
 
         <main class="content">
-          <GeneralInformation
-          :peakFlightAltitude="12000"
-          :totalFlights="150"
-          :averageFlightTime="45.5"
-          :flightDensity="3.2"
-          :totalDistance="25000"
-        />
-        <div class="charts-row">
-          <MonthlyGrowth
-            :flightData="[
-              { month: 'Янв', flights: 120 },
-              { month: 'Фев', flights: 135 },
-              { month: 'Мар', flights: 150 },
-              { month: 'Апр', flights: 170 },
-              { month: 'Май', flights: 200 },
-              { month: 'Июн', flights: 230 },
-              { month: 'Июл', flights: 260 },
-              { month: 'Авг', flights: 250 },
-              { month: 'Сен', flights: 270 },
-              { month: 'Окт', flights: 290 },
-              { month: 'Ноя', flights: 310 },
-              { month: 'Дек', flights: 330 }
-            ]"
-          />
-          <DailyChart
-            :dailyData="[
-              { period: 'Утро', flights: 50 },
-              { period: 'День', flights: 80 },
-              { period: 'Вечер', flights: 60 },
-              { period: 'Ночь', flights: 30 }
-            ]"
-          />
-          <div class="topList">
-            <TopList />
+          <!-- Отображаем дашборд только когда выбран соответствующий вид -->
+          <div v-if="currentView === 'dashboard'">
+            <GeneralInformation
+              :peakFlightAltitude="12000"
+              :totalFlights="150"
+              :averageFlightTime="45.5"
+              :flightDensity="3.2"
+              :totalDistance="25000"
+            />
+            <div class="charts-row">
+              <MonthlyGrowth
+                :flightData="[
+                  { month: 'Янв', flights: 120 },
+                  { month: 'Фев', flights: 135 },
+                  { month: 'Мар', flights: 150 },
+                  { month: 'Апр', flights: 170 },
+                  { month: 'Май', flights: 200 },
+                  { month: 'Июн', flights: 230 },
+                  { month: 'Июл', flights: 260 },
+                  { month: 'Авг', flights: 250 },
+                  { month: 'Сен', flights: 270 },
+                  { month: 'Окт', flights: 290 },
+                  { month: 'Ноя', flights: 310 },
+                  { month: 'Дек', flights: 330 }
+                ]"
+              />
+              <DailyChart
+                :dailyData="[
+                  { period: 'Утро', flights: 50 },
+                  { period: 'День', flights: 80 },
+                  { period: 'Вечер', flights: 60 },
+                  { period: 'Ночь', flights: 30 }
+                ]"
+              />
+              <div class="topList">
+                <TopList />
+              </div>
+              <ColumnarGraph />
+              <GraphZeroDays />
+            </div>
           </div>
-          <ColumnarGraph />
-          <GraphZeroDays />
-        </div>
+          
+          <!-- Отображаем топографию -->
           <TopoMap v-if="currentView === 'topography'" />
+          
+          <!-- Отображаем админку -->
           <AdminPage v-else-if="currentView === 'admin'" />
+          
+          <!-- Отображаем аналитику -->
+          <div v-else-if="currentView === 'analytics'">
+            <!-- Здесь будет содержимое для аналитики -->
+            <h2>Аналитика</h2>
+            <p>Страница аналитики находится в разработке</p>
+          </div>
         </main>
       </div>
     </div>
