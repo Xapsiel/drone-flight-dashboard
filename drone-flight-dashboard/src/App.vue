@@ -40,7 +40,9 @@
               { period: 'Ночь', flights: 30 }
             ]"
           />
-          <TopList />
+          <div class="topList">
+            <TopList />
+          </div>
           <ColumnarGraph />
           <GraphZeroDays />
         </div>
@@ -68,10 +70,12 @@ import TopList from './components/TopList.vue';
   position: relative;
 }
 
+
 .main-container {
   display: flex;
   flex: 1;
   width: 100%;
+  
 }
 
 header {
@@ -81,7 +85,6 @@ header {
   width: 100%;
   z-index: 1001;
   background: white;
-  border-bottom: 1px solid #e5e7eb;
 }
 
 .content {

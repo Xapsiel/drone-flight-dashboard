@@ -154,7 +154,7 @@
 }
 
 .nav-item.active .nav-link {
-  background-color: #b8b8b8;
+  background-color: #3b82f6;
   color: white;
 }
 
@@ -206,7 +206,9 @@
 }
 
 .footer-link:hover {
-  color: #3b82f6;
+  color: #242323;
+  background-color: #f3f4f6;
+
 }
 
 .footer-icon {
