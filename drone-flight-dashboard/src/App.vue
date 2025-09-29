@@ -2,16 +2,14 @@
   <div class="app-layout">
     <!-- Показываем страницу входа, если пользователь не авторизован -->
     <LoginPage v-if="!isAuthenticated && !isLoading" />
-    
+
     <!-- Показываем основное приложение, если пользователь авторизован -->
-    <div v-else-if="isAuthenticated" class="app-layout">
+    <div v-else-if="isAuthenticated" class="app-content">
       <Sidebar :current-view="currentView" @view-change="handleViewChange" />
-      
       <div class="main-container">
         <header>
           <Header />
         </header>
-
         <main class="content">
           <!-- Отображаем дашборд только когда выбран соответствующий вид -->
           <div v-if="currentView === 'dashboard'">
@@ -54,16 +52,15 @@
               <GraphZeroDays />
             </div>
           </div>
-          
+
           <!-- Отображаем топографию -->
           <TopoMap v-if="currentView === 'topography'" />
-          
+
           <!-- Отображаем админку -->
           <AdminPage v-else-if="currentView === 'admin'" />
-          
+
           <!-- Отображаем аналитику -->
           <div v-else-if="currentView === 'analytics'">
-            <!-- Здесь будет содержимое для аналитики -->
             <h2>Аналитика</h2>
             <p>Страница аналитики находится в разработке</p>
           </div>
@@ -80,106 +77,97 @@
 </template>
 
 <script setup>
-
-
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue';
 import GeneralInformation from './components/GeneralInformation.vue';
 import MonthlyGrowth from './components/MonthlyGrowth.vue';
 import DailyChart from './components/DailyChart.vue';
 import ColumnarGraph from './components/ColumnarGraph.vue';
 import GraphZeroDays from './components/GraphZeroDays.vue';
 import TopList from './components/TopList.vue';
-import Header from './components/Header.vue'
-import Sidebar from './components/Sidebar.vue'
-import TopoMap from './components/TopoMap.vue'
-import AdminPage from './components/AdminPage.vue'
-import LoginPage from './components/LoginPage.vue'
-import authService from './services/auth.js'
+import Header from './components/Header.vue';
+import Sidebar from './components/Sidebar.vue';
+import TopoMap from './components/TopoMap.vue';
+import AdminPage from './components/AdminPage.vue';
+import LoginPage from './components/LoginPage.vue';
+import authService from './services/auth.js';
 
-const currentView = ref('dashboard')
-const isLoading = ref(true)
+const currentView = ref('dashboard');
+const isLoading = ref(true);
 
-const isAuthenticated = computed(() => authService.isAuthenticated)
+const isAuthenticated = computed(() => authService.isAuthenticated);
 
 const handleViewChange = (view) => {
-  // Проверяем доступ к админской панели
   if (view === 'admin' && !authService.canAccessAdmin()) {
-    alert('У вас нет доступа к админской панели')
-    return
+    alert('У вас нет доступа к админской панели');
+    return;
   }
-  currentView.value = view
-}
+  currentView.value = view;
+};
 
-// Инициализация приложения
 onMounted(async () => {
   try {
-    console.log('🏁 [App] Инициализация приложения...')
-    console.log('🏁 [App] URL:', window.location.href)
-    console.log('🏁 [App] Search params:', window.location.search)
-    
-    // Проверяем, есть ли токен в URL (callback от Keycloak)
-    const urlParams = new URLSearchParams(window.location.search)
-    const token = urlParams.get('token')
-    
-    console.log('🏁 [App] Токен из URL:', token ? 'ЕСТЬ' : 'НЕТ')
+    console.log('🏁 [App] Инициализация приложения...');
+    console.log('🏁 [App] URL:', window.location.href);
+    console.log('🏁 [App] Search params:', window.location.search);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+
+    console.log('🏁 [App] Токен из URL:', token ? 'ЕСТЬ' : 'НЕТ');
     if (token) {
-      console.log('🏁 [App] ПОЛНЫЙ ТОКЕН ИЗ URL:', token)
-      console.log('🏁 [App] Токен (первые 20 символов):', token.substring(0, 20) + '...')
+      console.log('🏁 [App] ПОЛНЫЙ ТОКЕН ИЗ URL:', token);
+      console.log('🏁 [App] Токен (первые 20 символов):', token.substring(0, 20) + '...');
     }
-    const storedToken = localStorage.getItem('auth_token')
-    console.log('🏁 [App] Токен в localStorage:', storedToken ? 'ЕСТЬ' : 'НЕТ')
+    const storedToken = localStorage.getItem('auth_token');
+    console.log('🏁 [App] Токен в localStorage:', storedToken ? 'ЕСТЬ' : 'НЕТ');
     if (storedToken) {
-      console.log('🏁 [App] ПОЛНЫЙ ТОКЕН В LOCALSTORAGE:', storedToken)
+      console.log('🏁 [App] ПОЛНЫЙ ТОКЕН В LOCALSTORAGE:', storedToken);
     }
-    
-    // Проверяем cookies
-    console.log('🏁 [App] Все cookies:', document.cookie)
-    const cookieToken = document.cookie.split(';').find(cookie => cookie.trim().startsWith('auth_token='))
+
+    console.log('🏁 [App] Все cookies:', document.cookie);
+    const cookieToken = document.cookie.split(';').find(cookie => cookie.trim().startsWith('auth_token='));
     if (cookieToken) {
-      const tokenValue = cookieToken.split('=')[1]
-      console.log('🏁 [App] Токен в cookies:', tokenValue ? 'ЕСТЬ' : 'НЕТ')
+      const tokenValue = cookieToken.split('=')[1];
+      console.log('🏁 [App] Токен в cookies:', tokenValue ? 'ЕСТЬ' : 'НЕТ');
       if (tokenValue) {
-        console.log('🏁 [App] ПОЛНЫЙ ТОКЕН В COOKIES:', tokenValue)
+        console.log('🏁 [App] ПОЛНЫЙ ТОКЕН В COOKIES:', tokenValue);
       }
     } else {
-      console.log('🏁 [App] Токен в cookies: НЕТ')
+      console.log('🏁 [App] Токен в cookies: НЕТ');
     }
-    
+
     if (token) {
-      console.log('🏁 [App] Устанавливаем токен из URL...')
-      // Устанавливаем токен из URL
-      authService.setToken(token)
-      console.log('🏁 [App] Токен установлен, isAuthenticated:', authService.isAuthenticated)
-      // Очищаем URL от токена
-      window.history.replaceState({}, document.title, window.location.pathname)
-      console.log('🏁 [App] URL очищен от токена')
+      console.log('🏁 [App] Устанавливаем токен из URL...');
+      authService.setToken(token);
+      console.log('🏁 [App] Токен установлен, isAuthenticated:', authService.isAuthenticated);
+      window.history.replaceState({}, document.title, window.location.pathname);
+      console.log('🏁 [App] URL очищен от токена');
     }
-    
+
     if (authService.isAuthenticated) {
-      console.log('🏁 [App] Пользователь авторизован, получаем данные...')
+      console.log('🏁 [App] Пользователь авторизован, получаем данные...');
       try {
-        await authService.getCurrentUser()
-        console.log('🏁 [App] Пользователь получен:', authService.user)
+        await authService.getCurrentUser();
+        console.log('🏁 [App] Пользователь получен:', authService.user);
       } catch (userError) {
-        console.error('🏁 [App] Ошибка получения пользователя:', userError)
-        // Не выходим из системы при ошибке, возможно токен еще не готов
+        console.error('🏁 [App] Ошибка получения пользователя:', userError);
       }
     } else {
-      console.log('🏁 [App] Пользователь НЕ авторизован')
+      console.log('🏁 [App] Пользователь НЕ авторизован');
     }
-    
+
     console.log('🏁 [App] Инициализация завершена:', {
       isAuthenticated: authService.isAuthenticated,
       hasUser: !!authService.user,
-      currentView: currentView.value
-    })
+      currentView: currentView.value,
+    });
   } catch (error) {
-    console.error('🏁 [App] Ошибка инициализации:', error)
+    console.error('🏁 [App] Ошибка инициализации:', error);
   } finally {
-    console.log('🏁 [App] Устанавливаем isLoading = false')
-    isLoading.value = false
+    console.log('🏁 [App] Устанавливаем isLoading = false');
+    isLoading.value = false;
   }
-})
+});
 </script>
 
 <style scoped>
@@ -189,33 +177,35 @@ onMounted(async () => {
   position: relative;
 }
 
+.app-content {
+  display: flex;
+  width: 100%;
+}
 
 .main-container {
-  display: flex;
   flex: 1;
-  width: 100%;
-  
+  margin-left: 280px; /* Отступ для фиксированного сайдбара */
+  display: flex;
+  flex-direction: column;
 }
 
 header {
   position: fixed;
   top: 0;
-  /* Сдвигаем шапку вправо, чтобы она не перекрывала фиксированный Sidebar */
-  left: 280px;
-  width: calc(100% - 280px);
+  left: 280px; /* Сдвиг шапки для учета сайдбара */
+  width: calc(100% - 280px); /* Ширина шапки с учетом сайдбара */
   z-index: 1001;
   background: white;
 }
 
 .content {
-  flex: 1;
-  margin-top: 60px;
-  overflow-y: auto;
-  background: #f9fafb;
+  margin-top: 60px; /* Отступ для фиксированной шапки */
   padding: 16px;
+  background: #f9fafb;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-height: calc(100vh - 60px); /* Учитываем высоту шапки */
 }
 
 .charts-row {
@@ -224,13 +214,45 @@ header {
   flex-wrap: wrap;
 }
 
+.loading-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #f9fafb;
+}
+
+.loading-spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 @media (max-width: 768px) {
+  .app-content {
+    flex-direction: column;
+  }
+
   .main-container {
-    margin-left: 0;
+    margin-left: 0; /* Убираем отступ, если сайдбар скрыт */
+  }
+
+  header {
+    left: 0;
+    width: 100%; /* Шапка на всю ширину на мобильных */
   }
 
   .content {
-    margin-left: 0;
+    margin-top: 60px;
     padding: 16px;
   }
 
