@@ -14,26 +14,18 @@ import authService from '../services/auth.js'
 
 onMounted(async () => {
   try {
-    // Получаем токен из URL
     const urlParams = new URLSearchParams(window.location.search)
     const token = urlParams.get('token')
     
     if (token) {
-      // Устанавливаем токен
       authService.setToken(token)
-      
-      // Получаем информацию о пользователе
       await authService.getCurrentUser()
-      
-      // Редиректим на главную страницу
       window.location.href = '/'
     } else {
-      // Если токена нет, редиректим на страницу входа
       window.location.href = '/'
     }
   } catch (error) {
     console.error('Ошибка обработки callback:', error)
-    // В случае ошибки редиректим на главную
     window.location.href = '/'
   }
 })

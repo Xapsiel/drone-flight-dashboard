@@ -1,8 +1,9 @@
 <template>
   <div class="columnar-graph-container">
     <header class="header">
-      <h1 class="header-title">Средние ежедневные показатели</h1>
+      <h1 class="header-title">Показатели полётов</h1>
     </header>
+
     <div class="chart-controls">
       <button
         :class="{ active: chartType === 'bar' }"
@@ -17,6 +18,7 @@
         Круговая диаграмма
       </button>
     </div>
+
     <div class="chart-section">
       <v-chart :option="chartOption" autoresize class="chart" />
     </div>
@@ -34,16 +36,22 @@ export default {
     VChart: VueECharts,
   },
   props: {
-    averageDailyFlights: { type: Number, default: 150 },
-    averageDailyTrips: { type: Number, default: 120 },
+    flightStats: {
+      type: Object,
+      required: true,
+      default: () => ({
+        AvgDailyFlights: 0,
+        MedianDailyFlights: 0,
+      }),
+    },
   },
   setup(props) {
-    const chartType = ref('bar'); // Тип графика по умолчанию
+    const chartType = ref('bar');
 
     const chartOption = computed(() => {
       const data = [
-        { value: props.averageDailyFlights, name: 'Полёты' },
-        { value: props.averageDailyTrips, name: 'Рейсы' },
+        { value: props.flightStats.AvgDailyFlights, name: 'Среднее количество полётов' },
+        { value: props.flightStats.MedianDailyFlights, name: 'Медианное количество полётов' },
       ];
 
       if (chartType.value === 'bar') {
@@ -57,7 +65,7 @@ export default {
           },
           xAxis: {
             type: 'category',
-            data: ['Полёты', 'Рейсы'],
+            data: data.map(d => d.name),
             axisLabel: {
               fontFamily: 'Inter, sans-serif',
               color: '#4b5563',
@@ -84,7 +92,10 @@ export default {
                 borderRadius: [8, 8, 0, 0],
               },
               emphasis: {
-                itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0, 0, 0, 0.5)' },
+                itemStyle: {
+                  shadowBlur: 10,
+                  shadowColor: 'rgba(0, 0, 0, 0.5)',
+                },
               },
               animationEasing: 'cubicOut',
               animationDuration: 1000,
@@ -115,8 +126,8 @@ export default {
           series: [
             {
               type: 'pie',
-              radius: ['40%', '70%'], // Внутренний и внешний радиус для "пончика"
-              center: ['50%', '50%'], // Центрирование диаграммы
+              radius: ['40%', '70%'],
+              center: ['50%', '50%'],
               data: data,
               label: {
                 fontFamily: 'Inter, sans-serif',
@@ -128,7 +139,7 @@ export default {
                 borderColor: '#fff',
                 borderWidth: 2,
               },
-              color: ['#3b82f6', '#60a5fa'], // Цвета для Полёты и Рейсы
+              color: ['#3b82f6', '#60a5fa'],
               emphasis: {
                 itemStyle: {
                   shadowBlur: 10,
@@ -150,7 +161,10 @@ export default {
       }
     });
 
-    return { chartOption, chartType };
+    return {
+      chartType,
+      chartOption,
+    };
   },
 };
 </script>

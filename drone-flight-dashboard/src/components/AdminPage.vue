@@ -34,8 +34,6 @@
             @change="handleFileSelect"
             style="display: none"
           />
-          
-          <!-- Список выбранных файлов -->
           <div v-if="selectedFiles.length > 0" class="selected-files">
             <h3 class="files-title">Выбранные файлы:</h3>
             <div class="file-list">
@@ -58,8 +56,6 @@
               </div>
             </div>
           </div>
-          
-          <!-- Кнопки действий -->
           <div class="upload-actions">
             <button 
               @click="clearFiles"
@@ -78,8 +74,6 @@
             </button>
           </div>
         </div>
-        
-        <!-- Секция управления системой -->
         <div class="system-section">
           <h2 class="section-title">Управление системой</h2>
           
@@ -110,8 +104,6 @@
             </div>
           </div>
         </div>
-        
-        <!-- Секция статистики -->
         <div class="stats-section">
           <h2 class="section-title">Статистика</h2>
           
@@ -139,25 +131,22 @@
 import { ref, computed } from 'vue'
 import axios from 'axios'
 
-// Реактивные данные
 const selectedFiles = ref([])
 const isDragOver = ref(false)
 const isUploading = ref(false)
 const systemStatus = ref('active')
 
-// Статистика (можно получать с сервера)
 const stats = ref({
   totalFiles: 156,
   totalSize: '2.3 ГБ',
   lastUpload: '2 часа назад'
 })
 
-// Вычисляемые свойства
+
 const systemStatusText = computed(() => {
   return systemStatus.value === 'active' ? 'Активна' : 'Остановлена'
 })
 
-// Методы
 const triggerFileInput = () => {
   document.querySelector('input[type="file"]').click()
 }
@@ -281,7 +270,6 @@ const exportData = () => {
 }
 
 .admin-container {
-  /* Расширяем контейнер до ширины, согласованной с шапкой сайта */
   max-width: 1610px;
   width: 100%;
   margin: 0 auto;
@@ -310,7 +298,6 @@ const exportData = () => {
   border-bottom: 2px solid #e2e8f0;
 }
 
-/* Стили для карточек */
 .upload-section,
 .system-section,
 .stats-section {
@@ -370,7 +357,6 @@ const exportData = () => {
   margin: 0;
 }
 
-/* Список файлов */
 .selected-files {
   margin-top: 2rem;
 }
@@ -433,7 +419,6 @@ const exportData = () => {
   background: #dc2626;
 }
 
-/* Кнопки */
 .upload-actions {
   display: flex;
   gap: 1rem;
@@ -499,7 +484,6 @@ const exportData = () => {
   box-shadow: 0 14px 28px rgba(14,165,233,0.35);
 }
 
-/* Секция системы */
 .system-controls {
   display: flex;
   flex-direction: column;
@@ -534,8 +518,6 @@ const exportData = () => {
   background: #fef2f2;
   color: #991b1b;
 }
-
-/* Статистика */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -563,7 +545,6 @@ const exportData = () => {
   font-weight: 600;
 }
 
-/* Адаптивность */
 @media (max-width: 768px) {
   .admin-page {
     padding: 1rem;

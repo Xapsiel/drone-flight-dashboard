@@ -56,7 +56,6 @@
         <div class="map-wrapper" ref="mapWrapper">
           <div class="rf-map" :class="{ open: isMapOpen }">
             <div class="district"><b></b><span></span></div>
-            <div class="close-district" @click="closeRegion">&times;</div>
             
             <!-- Динамически создаем district-text для каждого data-code из SVG -->
             <div v-for="dataCode in dataCodes" :key="dataCode" :id="dataCode" class="district-text">
@@ -70,7 +69,7 @@
                 <button class="region-card-close" @click="closeRegionCard">×</button>
               </div>
               <div class="region-card-body">
-                <div class="region-stat"><span class="label">Метрика:</span> <span class="value">{{ selectedMetric || '—' }}</span></div>
+                <div class="region-stat"><span class="label">Метрика:</span> <span class="value">{{ getMetricName(selectedMetric) }}</span></div>
                 <div class="region-stat"><span class="label">Значение:</span> <span class="value">{{ metrics?.[selectedMetric] ?? '—' }}</span></div>
                 <div class="region-stat"><span class="label">Год:</span> <span class="value">{{ year }}</span></div>
               </div>
@@ -258,6 +257,16 @@ const downloadBlob = (blob, filename) => {
   a.click()
   document.body.removeChild(a)
   setTimeout(() => URL.revokeObjectURL(url), 0)
+}
+const getMetricName = (metricCode) => {
+      const metricNames = {
+        'TotalFlight': 'Всего полётов',
+        'PeakLoad': 'Пиковая нагрузка',
+        'FlightDensity': 'Плотность полётов',
+        'AvgDailyFlights': 'Среднесуточные полёты',
+        '': '—'
+      };
+      return metricNames[metricCode] || '—';
 }
 
 const downloadSVG = () => {
@@ -692,6 +701,10 @@ const refreshMetrics = async () => {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   overflow: hidden;
 }
+.district {
+  width: 100%;
+  height: 20px;
+}
 
 .map-container {
   flex: 1;
@@ -873,7 +886,7 @@ const refreshMetrics = async () => {
 
 /* Легенда тепловой карты */
 .heatmap-legend {
-  position: absolute;
+  position: fixed;
   bottom: 24px;
   right: 24px;
   background: #ffffff;
@@ -882,6 +895,7 @@ const refreshMetrics = async () => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border: 1px solid #e5e7eb;
   min-width: 160px;
+  z-index: 1000; /* Добавлено для уверенности, что элемент будет поверх других */
 }
 
 .legend-title {
@@ -962,14 +976,14 @@ const refreshMetrics = async () => {
 }
 
 .region-card-body {
-  display: grid;
+  display: list-item;
   grid-template-columns: 1fr 1fr;
   gap: 8px 12px;
 }
 
 .region-stat .label {
   color: #6b7280;
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 500;
 }
 
@@ -978,15 +992,17 @@ const refreshMetrics = async () => {
   font-weight: 600;
   font-size: 14px;
 }
-
-/* Боковая панель со списком регионов */
 .region-list-panel {
   width: 300px;
   background: linear-gradient(145deg, #ffffff, #f8fafc);
   border-left: 1px solid #e5e7eb;
   padding: 24px;
+  margin-right: 5vh;
+  margin-bottom: 5vh;
+  margin-top: 10vh;
   overflow-y: auto;
-  max-height: 650px;
+  max-height: 750px;
+  border-radius: 8px;
   box-shadow: -4px 0 12px rgba(0, 0, 0, 0.08);
 }
 

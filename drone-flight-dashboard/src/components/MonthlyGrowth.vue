@@ -1,9 +1,8 @@
 <template>
-  <div class="monthly-growth-container">
+  <div class="monthly-growth">
     <header class="header">
-      <h1 class="header-title">Рост количества полетов по месяцам</h1>
-    </header>
-    <div class="chart-controls">
+      <h1>Рост количества полетов по месяцам</h1>
+      <div class="chart-controls">
       <button
         :class="{ active: chartType === 'line' }"
         @click="chartType = 'line'"
@@ -17,155 +16,204 @@
         Круговая диаграмма
       </button>
     </div>
-    <div class="chart-section">
-      <v-chart :option="chartOption" autoresize class="chart" />
+    </header>
+    <div class="chart-container">
+      <v-chart
+        v-if="props.flightData.length"
+        class="chart"
+        :option="chartOption"
+        autoresize
+      />
+      <p v-else>Нет данных для отображения. Проверьте подключение к серверу или данные за 2025 год.</p>
     </div>
   </div>
 </template>
 
-<script>
-import { ref, computed } from 'vue';
-import VueECharts from 'vue-echarts';
-import 'echarts';
+<script setup>
+import { ref, computed, onMounted, provide } from 'vue';
+import { use } from 'echarts/core';
+import { CanvasRenderer } from 'echarts/renderers';
+import { LineChart, PieChart } from 'echarts/charts';
+import {
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
+  GridComponent,
+} from 'echarts/components';
+import VChart, { THEME_KEY } from 'vue-echarts';
 
-export default {
-  name: 'MonthlyGrowth',
-  components: {
-    VChart: VueECharts,
+use([
+  CanvasRenderer,
+  LineChart,
+  PieChart,
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
+  GridComponent,
+]);
+
+provide(THEME_KEY, 'light'); // Or 'dark' for a modern look
+
+const props = defineProps({
+  flightData: {
+    type: Array,
+    required: true,
+    default: () => [],
   },
-  props: {
-    flightData: {
-      type: Array,
-      default: () => [
-        { month: 'Янв', flights: 120 },
-        { month: 'Фев', flights: 135 },
-        { month: 'Мар', flights: 150 },
-        { month: 'Апр', flights: 170 },
-        { month: 'Май', flights: 200 },
-        { month: 'Июн', flights: 230 },
-        { month: 'Июл', flights: 260 },
-        { month: 'Авг', flights: 250 },
-        { month: 'Сен', flights: 270 },
-        { month: 'Окт', flights: 290 },
-        { month: 'Ноя', flights: 310 },
-        { month: 'Дек', flights: 330 },
-      ],
+});
+
+const chartType = ref('line');
+
+// Debug data and rendering
+onMounted(() => {
+  console.log('🏁 [MonthlyGrowth] Mounted, flightData:', props.flightData);
+  console.log('🏁 [MonthlyGrowth] chartType:', chartType.value);
+});
+
+// Computed chart option based on type
+const chartOption = computed(() => {
+  const data = props.flightData.length ? props.flightData : [
+    { month: 'Янв', flights: 0 },
+    { month: 'Фев', flights: 0 },
+    { month: 'Мар', flights: 0 },
+    { month: 'Апр', flights: 0 },
+    { month: 'Май', flights: 0 },
+    { month: 'Июн', flights: 0 },
+    { month: 'Июл', flights: 0 },
+    { month: 'Авг', flights: 0 },
+    { month: 'Сен', flights: 0 },
+    { month: 'Окт', flights: 0 },
+    { month: 'Ноя', flights: 0 },
+    { month: 'Дек', flights: 0 },
+  ];
+
+  const months = data.map(item => item.month);
+  const flights = data.map(item => Number(item.flights).toFixed(3));
+
+  if (chartType.value === 'line') {
+    return {
+      title: {
+        text: '',
+        left: 'left',
+      },
+      tooltip: {
+        trigger: 'axis',
+        formatter: (params) => {
+          return `${params[0].name}: ${params[0].value}`;
+        },
+      },
+      toolbox: {
+      feature: {
+        saveAsImage: {
+          title: 'Сохранить',
+        },
+      },
     },
-  },
-  setup(props) {
-    const chartType = ref('line'); // Тип графика по умолчанию
-
-    const chartOption = computed(() => {
-      if (chartType.value === 'line') {
-        return {
-          tooltip: {
-            trigger: 'axis',
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            borderColor: '#ddd',
-            textStyle: { color: '#333' },
-            formatter: 'Месяц: {b}<br>Полёты: {c}',
+      xAxis: {
+        type: 'category',
+        data: months,
+      },
+      yAxis: {
+        type: 'value',
+        name: 'Количество',
+        axisLabel: {
+          formatter: '{value}',
+        },
+      },
+      series: [
+        {
+          name: 'Количество полетов',
+          type: 'line',
+          data: flights,
+          smooth: true, // For smoother curve
+          symbol: 'circle',
+          symbolSize: 6,
+          itemStyle: {
+            color: '#5470c6',
           },
-          xAxis: {
-            type: 'category',
-            data: props.flightData.map(item => item.month),
-            axisLabel: {
-              fontFamily: 'Inter, sans-serif',
-              color: '#4b5563',
-              fontSize: 12,
-            },
-            axisLine: { lineStyle: { color: '#9ca3af' } },
-            splitLine: { show: false },
+          lineStyle: {
+            width: 3,
           },
-          yAxis: {
-            type: 'value',
-            name: 'Количество полётов',
-            nameTextStyle: { fontFamily: 'Inter, sans-serif', color: '#4b5563' },
-            axisLabel: { fontFamily: 'Inter, sans-serif', color: '#4b5563' },
-            axisLine: { lineStyle: { color: '#9ca3af' } },
-            splitLine: { lineStyle: { color: '#e5e7eb', type: 'dashed' } },
-          },
-          series: [
-            {
-              type: 'line',
-              data: props.flightData.map(item => item.flights),
-              smooth: true,
-              lineStyle: { color: '#3b82f6', width: 3 },
-              areaStyle: { color: 'rgba(59, 130, 246, 0.2)' },
-              itemStyle: { color: '#3b82f6' },
-              animationEasing: 'cubicOut',
-              animationDuration: 1000,
-            },
-          ],
-          grid: {
-            left: '5%',
-            right: '5%',
-            top: '15%',
-            bottom: '10%',
-          },
-          toolbox: {
-            feature: {
-              saveAsImage: { title: 'Сохранить' },
-              dataZoom: { title: { zoom: 'Масштаб', back: 'Сброс' } },
+          areaStyle: {
+            color: {
+              type: 'linear',
+              x: 0,
+              y: 0,
+              x2: 0,
+              y2: 1,
+              colorStops: [
+                { offset: 0, color: 'rgba(84, 112, 198, 0.6)' },
+                { offset: 1, color: 'rgba(84, 112, 198, 0.1)' },
+              ],
             },
           },
-          backgroundColor: 'transparent',
-        };
-      } else {
-        return {
-          tooltip: {
-            trigger: 'item',
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            borderColor: '#ddd',
-            textStyle: { color: '#333' },
-            formatter: '{b}: {c} ({d}%)',
-          },
-          series: [
-            {
-              type: 'pie',
-              data: props.flightData.map(item => ({
-                name: item.month,
-                value: item.flights,
-              })),
-              radius: '50%',
-              itemStyle: {
-                borderRadius: 5,
-                borderColor: '#fff',
-                borderWidth: 2,
-              },
-              label: {
-                fontFamily: 'Inter, sans-serif',
-                color: '#4b5563',
-                fontSize: 12,
-              },
-              emphasis: {
-                itemStyle: {
-                  shadowBlur: 10,
-                  shadowOffsetX: 0,
-                  shadowColor: 'rgba(0, 0, 0, 0.5)',
-                },
-              },
-              animationEasing: 'cubicOut',
-              animationDuration: 1000,
+        },
+      ],
+      animationDuration: 1000,
+    };
+  } else { // Pie
+    return {
+      title: {
+        text: '',
+        left: 'center',
+      },
+      tooltip: {
+        trigger: 'item',
+        formatter: '{a} <br/>{b}: {c} ({d}%)',
+      },
+      legend: {
+        orient: 'vertical',
+        right: 'right',
+        top: '15%',
+      },
+      series: [
+        {
+          name: 'Количество полетов',
+          type: 'pie',
+          radius: '55%',
+          center: ['44%', '50%'],
+          data: data.map(item => ({
+            value: Number(item.flights).toFixed(3),
+            name: item.month,
+          })),
+          emphasis: {
+            itemStyle: {
+              shadowBlur: 10,
+              shadowOffsetX: 0,
+              shadowColor: 'rgba(0, 0, 0, 0.5)',
             },
-          ],
-          backgroundColor: 'transparent',
-        };
-      }
-    });
-
-    return { chartOption, chartType };
-  },
-};
+          },
+          itemStyle: {
+            borderRadius: 5,
+            borderColor: '#fff',
+            borderWidth: 2,
+          },
+        },
+      ],
+      color: [
+        '#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de',
+        '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc', '#ff9f7f',
+        '#67e0e3', '#c4ebad',
+      ], // Custom color palette for beauty
+      animationType: 'scale',
+      animationEasing: 'elasticOut',
+      animationDelay: 20,
+    };
+  }
+});
 </script>
 
 <style scoped>
-.monthly-growth-container {
-  width: 530px;
-  margin: 2vh 0;
-  padding: 10px;
+.monthly-growth {
+  padding: 16px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 530px;
 }
-
-.header-title {
+.header{
+  margin: 2vh 0;
+}
+h1{
   font-size: 1rem;
   font-weight: 700;
   color: #5a5959;
@@ -180,6 +228,7 @@ export default {
   margin-bottom: 20px;
 }
 
+
 .chart-controls button {
   padding: 8px 16px;
   border: none;
@@ -193,32 +242,25 @@ export default {
 
 .chart-controls button.active,
 .chart-controls button:hover {
-  background-color: #3b82f6;
-  color: #fff;
+  background: #007bff;
+  color: white;
 }
 
-.chart-section {
-  background: #ffffff;
-  border-radius: 12px;
+.chart-container {
+  position: relative;
+  height: 435px;
   padding: 20px;
+  background: white;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  border-radius: 12px;
+  min-height: 300px;
+  overflow: visible;
 }
 
 .chart {
-  height: 400px;
+  height: 430px;
+  width: 100%;
 }
 
-@media (max-width: 768px) {
-  .monthly-growth-container {
-    width: 100%;
-  }
-
-  .header-title {
-    font-size: 1.5rem;
-  }
-
-  .chart {
-    height: 300px;
-  }
-}
 </style>

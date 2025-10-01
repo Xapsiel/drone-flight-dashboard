@@ -110,7 +110,7 @@ export default {
           },
           yAxis: {
             type: 'value',
-            name: 'Количество полётов',
+            name: 'Количество',
             nameTextStyle: { fontFamily: 'Inter, sans-serif', color: '#4b5563' },
             axisLabel: { fontFamily: 'Inter, sans-serif', color: '#4b5563' },
             axisLine: { lineStyle: { color: '#9ca3af' } },
@@ -170,7 +170,6 @@ export default {
   justify-content: left;
   gap: 10px;
   margin-top: 20px;
-
   margin-bottom: 20px;
 }
 
