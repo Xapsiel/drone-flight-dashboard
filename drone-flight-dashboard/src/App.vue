@@ -418,4 +418,80 @@ header {
     flex-direction: column;
   }
 }
+
+/* Планшеты в горизонтальной ориентации (768px–1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .app-content {
+    flex-direction: row;
+  }
+
+  .main-container {
+    margin-left: 200px; /* Уменьшаем ширину сайдбара */
+  }
+
+  header {
+    left: 200px;
+    width: calc(100% - 200px);
+  }
+
+  .charts-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .topList,
+  .charts-row > * {
+    flex: 1 1 48%; /* Графики делятся на 2 колонки */
+  }
+}
+
+/* Мобильные устройства (до 768px) */
+@media (max-width: 767px) {
+  .app-content {
+    flex-direction: column;
+  }
+
+  .main-container {
+    margin-left: 0;
+  }
+
+  header {
+    left: 0;
+    width: 100%;
+  }
+ 
+
+  .charts-row {
+    flex-direction: column;
+  }
+
+  .topList,
+  .charts-row > * {
+    flex: 1 1 100%;
+  }
+}
+
+/* Мониторы (от 1024px и выше) — поведение по умолчанию */
+@media (min-width: 1024px) {
+  .main-container {
+    margin-left: 280px;
+  }
+
+  header {
+    left: 280px;
+    width: calc(100% - 280px);
+  }
+
+  .charts-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .topList,
+  .charts-row > * {
+    flex: 0. 0 30%;
+  }
+}
 </style>

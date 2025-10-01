@@ -335,6 +335,12 @@ export default defineComponent({
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+@media (max-width: 1024px) {
+  .top-list {
+    min-width: 530px;
+    max-width: 600px;
+  }
+}
 
 .error {
   color: #dc2626;
