@@ -440,7 +440,7 @@ const downloadPDF = async () => {
   }
 }
 
-// Маппинг кодов регионов (без изменений)
+// Маппинг кодов регионов 
 const idToCodeMap = {
   3: 'RU-MUR',
   4: 'RU-PER',
@@ -822,7 +822,7 @@ const refreshMetrics = async () => {
 .content-wrapper {
   display: flex;
   gap: 24px;
-  max-width: 1400px;
+  max-width: 1550px;
   margin: 0 auto;
   background: #ffffff;
   border-radius: 16px;
@@ -836,7 +836,7 @@ const refreshMetrics = async () => {
 
 .map-container {
   flex: 1;
-  max-width: 1000px;
+  max-width: 1200px;
   padding: 24px;
 }
 

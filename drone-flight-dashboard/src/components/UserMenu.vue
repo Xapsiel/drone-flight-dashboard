@@ -1,35 +1,20 @@
 <template>
   <div class="user-menu">
     <div class="user-info" @click="toggleMenu">
-      <span class="username">{{ user.username || 'Пользователь' }}</span>
-      <div class="user-avatar">
-        {{ getInitials(user.username) }}
+      <span class="username">{{ user.username || '' }}</span>
+      <div class="user-avatar door-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="door-svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 12h.01M3 21h18V3H3v18zM9 21V3"/>
+        </svg>
       </div>
+
       <svg class="dropdown-icon" :class="{ 'rotated': isMenuOpen }" viewBox="0 0 24 24" fill="none" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
       </svg>
     </div>
 
     <div v-if="isMenuOpen" class="dropdown-menu" @click.stop>
-      <div class="user-details">
-        <div class="user-avatar-large">
-          {{ getInitials(user.username) }}
-        </div>
-        <div class="user-data">
-          <h4>{{ user.username }}</h4>
-          <p v-if="user.email">{{ user.email }}</p>
-          <div class="user-roles">
-            <span 
-              v-for="role in user.roles" 
-              :key="role"
-              class="role-badge"
-              :class="getRoleClass(role)"
-            >
-              {{ getRoleDisplayName(role) }}
-            </span>
-          </div>
-        </div>
-      </div>
 
       <div class="menu-divider"></div>
 
@@ -169,7 +154,6 @@ onUnmounted(() => {
 .user-avatar {
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
   color: white;
   border-radius: 50%;
   display: flex;
@@ -177,6 +161,27 @@ onUnmounted(() => {
   justify-content: center;
   font-weight: 600;
   font-size: 0.875rem;
+}
+
+.door-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+}
+
+.door-svg {
+  width: 20px;
+  height: 20px;
+  stroke: #374151; /* обычный цвет (темно-серый) */
+  transition: stroke 0.3s ease;
+}
+
+.user-info:hover .door-svg {
+  stroke: #dc2626; /* красный при наведении */
 }
 
 .dropdown-icon {
@@ -213,7 +218,6 @@ onUnmounted(() => {
 .user-avatar-large {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
   color: white;
   border-radius: 50%;
   display: flex;

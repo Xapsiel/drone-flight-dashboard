@@ -260,9 +260,9 @@ export default defineComponent({
 <style scoped>
 .top-list {
   width: 100%;
-  min-width: 300px;
-  max-width: 300px;
-  margin: 3vh auto;
+  min-width: 400px;
+  max-width: 400px;
+  margin-top: 3vh;
   padding: 20px;
   overflow-y: auto;
   max-height: 539px;
@@ -299,7 +299,7 @@ export default defineComponent({
   font-size: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
-  min-width: 230px;
+  min-width: 340px;
 }
 
 .sort-select:focus {

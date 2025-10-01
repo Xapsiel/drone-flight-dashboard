@@ -114,36 +114,14 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background: radial-gradient(1200px 400px at 10% 10%, rgba(59,130,246,0.25), transparent 60%),
-              radial-gradient(800px 320px at 90% 80%, rgba(99,102,241,0.25), transparent 60%),
-              linear-gradient(135deg, #0ea5e9 0%, #6366f1 50%, #7c3aed 100%);
+  background: linear-gradient(180deg, #f8fafc, #f1f5f9);
   position: relative;
   overflow: hidden;
 }
 
 .login-page::before,
 .login-page::after {
-  content: "";
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.35;
-}
-
-.login-page::before {
-  width: 380px;
-  height: 380px;
-  background: #60a5fa;
-  top: -120px;
-  left: -120px;
-}
-
-.login-page::after {
-  width: 320px;
-  height: 320px;
-  background: #a78bfa;
-  bottom: -100px;
-  right: -100px;
+  display: none;
 }
 
 .login-container {
@@ -157,6 +135,7 @@ onMounted(async () => {
   padding: 3rem;
   max-width: 520px;
   width: 100%;
+  margin: 0 auto; /* Центрирование по горизонтали */
   text-align: center;
   transition: transform .25s ease, box-shadow .25s ease;
 }
@@ -242,6 +221,7 @@ onMounted(async () => {
   font-weight: 700;
   color: #111827;
   margin-bottom: 0.75rem;
+  margin-top: 0.25rem;
 }
 
 .description {
@@ -332,6 +312,7 @@ onMounted(async () => {
   padding-top: 1.5rem;
   color: #64748b;
   font-size: 0.875rem;
+  text-align: center;
 }
 
 /* Адаптивность */
@@ -339,43 +320,19 @@ onMounted(async () => {
   .login-page {
     padding: 1rem;
   }
-  
+
   .login-container {
     padding: 2rem 1.4rem;
     border-radius: 16px;
   }
-  
+
   .title {
     font-size: 1.6rem;
   }
-  
+
   .btn-large {
     padding: 0.9rem 1.4rem;
     font-size: 1rem;
   }
-}
-
-/* --- Overrides: выравнивание по теме основного сайта и ширина --- */
-.login-page {
-  background: linear-gradient(180deg, #f8fafc, #f1f5f9);
-}
-.login-page::before,
-.login-page::after {
-  display: none; /* убираем декоративные пятна для единого стиля */
-}
-.login-container {
-  max-width: 960px; /* растягиваем карточку шире, почти на всю страницу */
-  text-align: left; /* как на остальных страницах */
-}
-.login-header,
-.login-actions,
-.login-footer {
-  text-align: left;
-}
-.login-actions h2 {
-  margin-top: 0.25rem;
-}
-@media (min-width: 1280px) {
-  .login-container { max-width: 1100px; }
 }
 </style>

@@ -8,7 +8,14 @@
       <Sidebar :current-view="currentView" @view-change="handleViewChange" />
       <div class="main-container">
         <header>
-          <Header />
+          <Header 
+            :selected-region-id="selectedRegionId"
+            :selected-year="selectedYear"
+            :available-years="availableYears"
+            @region-change="onRegionChange"
+            @year-change="onYearChange"
+            @apply-filters="applyFilters"
+          />
         </header>
         <main class="content">
           <!-- Отображаем дашборд только когда выбран соответствующий вид -->
@@ -63,7 +70,6 @@
     </div>
   </div>
 </template>
-
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
@@ -84,6 +90,10 @@ const currentView = ref('dashboard');
 const isLoading = ref(true);
 const isDataLoading = ref(false);
 const isDataLoaded = ref(false);
+const selectedRegionId = ref('all');
+const selectedYear = ref(2025);
+const availableYears = ref([2023, 2024, 2025, 2026]);
+
 const generalMetrics = ref({
   peakFlightAltitude: 0,
   totalFlights: 0,
@@ -103,7 +113,6 @@ const flightStats = computed(() => {
   const avgDailyFlights = dailyMetricsData.value.reduce((sum, region) => 
     sum + region.averageDailyFlights, 0) / dailyMetricsData.value.length || 0;
   
-  // Для медианы нужно вычислить медианное значение
   const dailyFlights = dailyMetricsData.value.map(region => region.averageDailyFlights);
   const medianDailyFlights = calculateMedian(dailyFlights);
   
@@ -112,6 +121,11 @@ const flightStats = computed(() => {
     MedianDailyFlights: Number(medianDailyFlights.toFixed(3)),
   };
 });
+
+// Функция для получения названия региона
+const getRegionName = (regionId) => {
+  return regionNames[regionId] || `Регион ${regionId}`;
+};
 
 // Функция для вычисления медианы
 const calculateMedian = (numbers) => {
@@ -126,6 +140,7 @@ const calculateMedian = (numbers) => {
   
   return sorted[middle];
 };
+
 const handleViewChange = (view) => {
   if (view === 'admin' && !authService.canAccessAdmin()) {
     alert('У вас нет доступа к админской панели');
@@ -139,6 +154,19 @@ const handleViewChange = (view) => {
 
 const updateSortType = (newSortType) => {
   sortType.value = newSortType;
+};
+
+// Обработчики изменения фильтров
+const onRegionChange = () => {
+  applyFilters();
+};
+
+const onYearChange = () => {
+  applyFilters();
+};
+
+const applyFilters = () => {
+  fetchMetrics();
 };
 
 const fetchMetrics = async () => {
@@ -157,63 +185,33 @@ const fetchMetrics = async () => {
       throw new Error('No authentication token available');
     }
 
-    const response = await axios.get('http://localhost:8080/metrics/all?year=2025', {
-      params: { year: 2025 },
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    const data = response.data.data; // Access the 'data' key
-    console.log('🏁 [App] Backend response:', JSON.stringify(data, null, 2));
-
-    // Validate and assign general metrics with 3 decimal places for flightDensity and averageFlightTime
-    generalMetrics.value = {
-      peakFlightAltitude: data.reduce((max, region) => Math.max(max, region.PeakLoad || 0), 0),
-      totalFlights: data.reduce((sum, region) => sum + (region.TotalFlight || 0), 0),
-      averageFlightTime: Number(
-        (data.reduce((sum, region) => sum + (region.AvgDurationMinutes || 0), 0) / data.length || 0).toFixed(3)
-      ),
-      flightDensity: Number(
-        (data.reduce((sum, region) => sum + (region.FlightDensity || 0), 0) / data.length || 0).toFixed(3)
-      ),
-      totalDistance: data.reduce((sum, region) => sum + (region.TotalDistance || 0), 0),
-    };
-
-    // Prepare data for MonthlyGrowth
-    monthlyFlightData.value = Array.from({ length: 12 }, (_, index) => {
-      const monthIndex = index + 1;
-      const flights = data.reduce((sum, region) => {
-        const monthlyGrowth = region.MonthlyGrowth || {};
-        return sum + (parseFloat(monthlyGrowth[monthIndex]) || 0);
-      }, 0);
-      return { month: getMonthName(monthIndex), flights: Number(flights.toFixed(3)) };
-    });
-    console.log('🏁 [App] Final monthlyFlightData:', monthlyFlightData.value);
-
-    // Prepare data for DailyChart
-    dailyFlightData.value = ['Morning', 'Day', 'Evening', 'Night'].map(period => ({
-      period: getPeriodName(period),
-      flights: data.reduce((sum, region) => sum + (region[`${period}Flights`] || 0), 0),
-    }));
-
-    // Prepare data for ColumnarGraph
-    dailyMetricsData.value = data.map(region => ({
-      region: region.RegionName || 'Unknown',
-      averageDailyFlights: Number((region.AvgDailyFlights || 0).toFixed(3)),
-    }));
-
-    // Prepare data for GraphZeroDays
-    zeroFlightDaysData.value = data.map(region => ({
-      region: region.RegionName || 'Unknown',
-      zeroFlightDays: (region.ZeroFlightDays || []).length,
-    }));
-
-    // Prepare data for TopList
-    topListData.value = data.map(region => ({
-      region: region.RegionName || 'Unknown',
-      flights: region.TotalFlight || 0,
-      duration: Number((region.AvgDurationMinutes || 0).toFixed(3)),
-    }));
+    let response;
+    
+    // Если выбран конкретный регион, используем endpoint для одного региона
+    if (selectedRegionId.value !== 'all') {
+      response = await axios.get('http://127.0.0.1:8080/metrics', {
+        params: { 
+          reg_id: selectedRegionId.value, 
+          year: selectedYear.value 
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      // Преобразуем данные одного региона в массив для совместимости
+      const singleRegionData = response.data.data;
+      processMetricsData([singleRegionData]);
+    } else {
+      // Если выбран "Все регионы", используем старый endpoint
+      response = await axios.get('http://localhost:8080/metrics/all', {
+        params: { year: selectedYear.value },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = response.data.data;
+      processMetricsData(data);
+    }
 
     isDataLoaded.value = true;
   } catch (error) {
@@ -227,6 +225,58 @@ const fetchMetrics = async () => {
   } finally {
     isDataLoading.value = false;
   }
+};
+
+// Функция для обработки данных метрик (вынесена для повторного использования)
+const processMetricsData = (data) => {
+  // Validate and assign general metrics with 3 decimal places for flightDensity and averageFlightTime
+  generalMetrics.value = {
+    peakFlightAltitude: data.reduce((max, region) => Math.max(max, region.PeakLoad || 0), 0),
+    totalFlights: data.reduce((sum, region) => sum + (region.TotalFlight || 0), 0),
+    averageFlightTime: Number(
+      (data.reduce((sum, region) => sum + (region.AvgDurationMinutes || 0), 0) / data.length || 0).toFixed(3)
+    ),
+    flightDensity: Number(
+      (data.reduce((sum, region) => sum + (region.FlightDensity || 0), 0) / data.length || 0).toFixed(3)
+    ),
+    totalDistance: data.reduce((sum, region) => sum + (region.TotalDistance || 0), 0),
+  };
+
+  // Prepare data for MonthlyGrowth
+  monthlyFlightData.value = Array.from({ length: 12 }, (_, index) => {
+    const monthIndex = index + 1;
+    const flights = data.reduce((sum, region) => {
+      const monthlyGrowth = region.MonthlyGrowth || {};
+      return sum + (parseFloat(monthlyGrowth[monthIndex]) || 0);
+    }, 0);
+    return { month: getMonthName(monthIndex), flights: Number(flights.toFixed(3)) };
+  });
+  console.log('🏁 [App] Final monthlyFlightData:', monthlyFlightData.value);
+
+  // Prepare data for DailyChart
+  dailyFlightData.value = ['Morning', 'Day', 'Evening', 'Night'].map(period => ({
+    period: getPeriodName(period),
+    flights: data.reduce((sum, region) => sum + (region[`${period}Flights`] || 0), 0),
+  }));
+
+  // Prepare data for ColumnarGraph
+  dailyMetricsData.value = data.map(region => ({
+    region: region.RegionName || getRegionName(region.RegionID) || 'Unknown',
+    averageDailyFlights: Number((region.AvgDailyFlights || 0).toFixed(3)),
+  }));
+
+  // Prepare data for GraphZeroDays
+  zeroFlightDaysData.value = data.map(region => ({
+    region: region.RegionName || getRegionName(region.RegionID) || 'Unknown',
+    zeroFlightDays: (region.ZeroFlightDays || []).length,
+  }));
+
+  // Prepare data for TopList
+  topListData.value = data.map(region => ({
+    region: region.RegionName || getRegionName(region.RegionID) || 'Unknown',
+    flights: region.TotalFlight || 0,
+    duration: Number((region.AvgDurationMinutes || 0).toFixed(3)),
+  }));
 };
 
 const getMonthName = (monthIndex) => {
@@ -313,10 +363,10 @@ onMounted(async () => {
   }
 });
 </script>
+
 <style scoped>
 .app-layout {
   min-height: 100vh;
-  display: flex;
   position: relative;
 }
 
@@ -327,7 +377,7 @@ onMounted(async () => {
 
 .main-container {
   flex: 1;
-  margin-left: 280px; /* Отступ для фиксированного сайдбара */
+  margin-left: 280px;
   display: flex;
   flex-direction: column;
 }
@@ -335,20 +385,80 @@ onMounted(async () => {
 header {
   position: fixed;
   top: 0;
-  left: 280px; /* Сдвиг шапки для учета сайдбара */
-  width: calc(100% - 280px); /* Ширина шапки с учетом сайдбара */
+  left: 280px;
+  width: calc(100% - 280px);
   z-index: 1001;
   background: white;
 }
 
 .content {
-  margin-top: 60px; /* Отступ для фиксированной шапки */
+  margin-top: 60px;
   padding: 16px;
   background: #f9fafb;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  min-height: calc(100vh - 60px); /* Учитываем высоту шапки */
+  min-height: calc(100vh - 60px);
+}
+
+/* Стили для панели фильтров */
+.filters-panel {
+  display: flex;
+  gap: 30px;
+  align-items: end;
+  width: 87%;
+  padding: 24px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 200px;
+}
+
+.filter-group label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+}
+
+.filter-group select {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  font-size: 14px;
+  color: #374151;
+}
+
+.filter-group select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.apply-filters-btn {
+  padding: 8px 16px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  height: fit-content;
+  transition: background-color 0.2s;
+}
+
+.apply-filters-btn:hover {
+  background: #0056b3;
 }
 
 .charts-row {
@@ -401,17 +511,26 @@ header {
   }
 
   .main-container {
-    margin-left: 0; /* Убираем отступ, если сайдбар скрыт */
+    margin-left: 0;
   }
 
   header {
     left: 0;
-    width: 100%; /* Шапка на всю ширину на мобильных */
+    width: 100%;
   }
 
   .content {
     margin-top: 60px;
     padding: 16px;
+  }
+
+  .filters-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-group {
+    min-width: auto;
   }
 
   .charts-row {
@@ -426,12 +545,16 @@ header {
   }
 
   .main-container {
-    margin-left: 200px; /* Уменьшаем ширину сайдбара */
+    margin-left: 200px;
   }
 
   header {
     left: 200px;
     width: calc(100% - 200px);
+  }
+
+  .filters-panel {
+    flex-wrap: wrap;
   }
 
   .charts-row {
@@ -442,7 +565,7 @@ header {
 
   .topList,
   .charts-row > * {
-    flex: 1 1 48%; /* Графики делятся на 2 колонки */
+    flex: 1 1 48%;
   }
 }
 
@@ -460,7 +583,10 @@ header {
     left: 0;
     width: 100%;
   }
- 
+
+  .filters-panel {
+    flex-direction: column;
+  }
 
   .charts-row {
     flex-direction: column;
@@ -472,7 +598,7 @@ header {
   }
 }
 
-/* Мониторы (от 1024px и выше) — поведение по умолчанию */
+/* Мониторы (от 1024px и выше) */
 @media (min-width: 1024px) {
   .main-container {
     margin-left: 280px;
@@ -483,6 +609,10 @@ header {
     width: calc(100% - 280px);
   }
 
+  .filters-panel {
+    flex-wrap: nowrap;
+  }
+
   .charts-row {
     flex-direction: row;
     flex-wrap: wrap;
@@ -491,7 +621,7 @@ header {
 
   .topList,
   .charts-row > * {
-    flex: 0. 0 30%;
+    flex: 0 0 30%;
   }
 }
 </style>

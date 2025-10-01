@@ -4,7 +4,7 @@
       <div class="logo">
         <img class="logo-image" :src="drone" alt="Drone logo" />
         <div class="logo-text">
-          <span class="logo-top">бпла</span>
+          <span class="logo-top">БПЛА</span>
           <span class="logo-bottom">аналитикс</span>
         </div>
       </div>
@@ -23,12 +23,6 @@
           <a href="#" class="nav-link" @click.prevent="$emit('view-change', 'topography')">
             <img class="secondary-image" :src="earth" alt="Pin icon" />
             <span>Топография</span>
-          </a>
-        </li>
-        <li class="nav-item" :class="{ active: currentView === 'analytics' }">
-          <a href="#" class="nav-link" @click.prevent="$emit('view-change', 'analytics')">
-            <img class="secondary-image" :src="diagram" alt="Diagram icon" />
-            <span>Аналитика</span>
           </a>
         </li>
         <li class="nav-item" :class="{ active: currentView === 'admin' }">
@@ -97,6 +91,7 @@
   background: #ffffff;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   z-index: 1002; 
   overflow-y: auto;
 }
@@ -126,7 +121,7 @@
 
 .logo-top {
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 900;
 }
 
 .logo-bottom {
