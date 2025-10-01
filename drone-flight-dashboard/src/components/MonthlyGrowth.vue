@@ -52,8 +52,7 @@ use([
   GridComponent,
 ]);
 
-provide(THEME_KEY, 'light'); // Or 'dark' for a modern look
-
+provide(THEME_KEY, 'light'); 
 const props = defineProps({
   flightData: {
     type: Array,
@@ -64,13 +63,12 @@ const props = defineProps({
 
 const chartType = ref('line');
 
-// Debug data and rendering
 onMounted(() => {
   console.log('🏁 [MonthlyGrowth] Mounted, flightData:', props.flightData);
   console.log('🏁 [MonthlyGrowth] chartType:', chartType.value);
 });
 
-// Computed chart option based on type
+
 const chartOption = computed(() => {
   const data = props.flightData.length ? props.flightData : [
     { month: 'Янв', flights: 0 },
@@ -125,7 +123,7 @@ const chartOption = computed(() => {
           name: 'Количество полетов',
           type: 'line',
           data: flights,
-          smooth: true, // For smoother curve
+          smooth: true, 
           symbol: 'circle',
           symbolSize: 6,
           itemStyle: {
@@ -151,7 +149,7 @@ const chartOption = computed(() => {
       ],
       animationDuration: 1000,
     };
-  } else { // Pie
+  } else { 
     return {
       title: {
         text: '',
@@ -194,7 +192,7 @@ const chartOption = computed(() => {
         '#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de',
         '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc', '#ff9f7f',
         '#67e0e3', '#c4ebad',
-      ], // Custom color palette for beauty
+      ], 
       animationType: 'scale',
       animationEasing: 'elasticOut',
       animationDelay: 20,
@@ -205,10 +203,10 @@ const chartOption = computed(() => {
 
 <style scoped>
 .monthly-growth {
-  padding: 16px;
+  padding: 12px;
   border-radius: 8px;
   width: 100%;
-  max-width: 530px;
+  width: 530px;
 }
 .header{
   margin: 2vh 0;
@@ -248,7 +246,7 @@ h1{
 
 .chart-container {
   position: relative;
-  height: 435px;
+  height: 440px;
   padding: 20px;
   background: white;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -259,7 +257,7 @@ h1{
 }
 
 .chart {
-  height: 430px;
+  height: 450px;
   width: 100%;
 }
 

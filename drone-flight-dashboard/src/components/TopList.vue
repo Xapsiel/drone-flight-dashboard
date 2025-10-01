@@ -260,6 +260,7 @@ export default defineComponent({
 <style scoped>
 .top-list {
   width: 100%;
+  min-width: 300px;
   max-width: 300px;
   margin: 3vh auto;
   padding: 20px;
@@ -353,7 +354,24 @@ export default defineComponent({
 .retry-btn:hover {
   background: #2563eb;
 }
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
 
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
 .list {
   list-style: none;
   padding: 0;

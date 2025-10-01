@@ -1,4 +1,3 @@
-```vue
 <template>
   <div class="topo-map">
     <div class="content-wrapper">
@@ -44,7 +43,12 @@
           >
             Сбросить
           </button>
-
+          <!-- Кнопки управления зумом -->
+          <div class="zoom-controls">
+            <button class="zoom-btn" @click="zoomIn">+</button>
+            <button class="zoom-btn" @click="zoomOut">−</button>
+            <button class="zoom-btn" @click="resetZoom">Сброс</button>
+          </div>
           <div class="download-controls">
             <span class="control-label">Скачать карту:</span>
             <button class="download-btn" @click="downloadSVG">SVG</button>
@@ -53,8 +57,12 @@
           </div>
         </div>
 
-        <div class="map-wrapper" ref="mapWrapper">
-          <div class="rf-map" :class="{ open: isMapOpen }">
+        <div class="map-wrapper" ref="mapWrapper" @wheel="handleWheel" @mousedown="startPan" @mousemove="doPan" @mouseup="endPan" @mouseleave="endPan">
+          <div class="zoom-indicator" v-if="zoomLevel !== 1">
+            Масштаб: {{ (zoomLevel * 100).toFixed(0) }}%
+          </div>
+          
+          <div class="rf-map" :class="{ open: isMapOpen }" :style="transformStyle">
             <div class="district"><b></b><span></span></div>
             
             <!-- Динамически создаем district-text для каждого data-code из SVG -->
@@ -63,7 +71,11 @@
             </div>
 
             <!-- Карточка региона -->
-            <div v-if="regionCard.visible" class="region-card" :style="{ left: regionCard.x + 'px', top: regionCard.y + 'px' }">
+            <div 
+              v-if="regionCard.visible" 
+              class="region-card" 
+              :style="regionCardStyle"
+            >
               <div class="region-card-header">
                 <div class="region-card-title">{{ selectedRegion?.title }}</div>
                 <button class="region-card-close" @click="closeRegionCard">×</button>
@@ -170,7 +182,6 @@
           </div>
           <div v-if="mapError" class="map-error">Ошибка загрузки карты. Проверьте консоль.</div>
           
-          <!-- Легенда тепловой карты -->
           <div v-if="heatmapActive" class="heatmap-legend">
             <div class="legend-title">Значения: {{ selectedMetric }}</div>
             <div class="legend-gradient">
@@ -182,7 +193,6 @@
         </div>
       </div>
 
-      <!-- Боковая панель со списком регионов -->
       <aside class="region-list-panel">
         <h3 class="panel-title">Регионы</h3>
         <div class="region-list">
@@ -206,7 +216,16 @@ import { ref, onMounted, computed } from 'vue'
 import metricsService from '../services/metrics.js'
 import { jsPDF } from 'jspdf'
 
-// Реактивные данные
+
+const zoomLevel = ref(1)
+const translateX = ref(0)
+const translateY = ref(0)
+const isPanning = ref(false)
+const startPanX = ref(0)
+const startPanY = ref(0)
+const startTranslateX = ref(0)
+const startTranslateY = ref(0)
+
 const selectedRegion = ref(null)
 const metrics = ref(null)
 const loading = ref(false)
@@ -222,12 +241,94 @@ const heatmapActive = ref(false)
 const regionMetrics = ref({})
 const regionCard = ref({ visible: false, x: 0, y: 0 })
 
-// Сортировка регионов по названию
+const transformStyle = computed(() => {
+  return {
+    transform: `translate(${translateX.value}px, ${translateY.value}px) scale(${zoomLevel.value})`,
+    transformOrigin: '0 0'
+  }
+})
+
+const handleWheel = (event) => {
+  event.preventDefault()
+  
+  const delta = -Math.sign(event.deltaY)
+  const zoomFactor = 0.1
+  const newZoom = zoomLevel.value + delta * zoomFactor
+  
+  // Ограничиваем зум между 0.1 и 5
+  if (newZoom >= 0.1 && newZoom <= 5) {
+    // Вычисляем позицию мыши относительно карты
+    const rect = event.currentTarget.getBoundingClientRect()
+    const mouseX = event.clientX - rect.left
+    const mouseY = event.clientY - rect.top
+    
+    // Вычисляем смещение для сохранения позиции под курсором
+    const scaleChange = newZoom / zoomLevel.value
+    translateX.value = mouseX - (mouseX - translateX.value) * scaleChange
+    translateY.value = mouseY - (mouseY - translateY.value) * scaleChange
+    
+    zoomLevel.value = newZoom
+  }
+}
+
+// Обработчики для панорамирования
+const startPan = (event) => {
+  if (event.button !== 0) return // Только левая кнопка мыши
+  
+  isPanning.value = true
+  startPanX.value = event.clientX
+  startPanY.value = event.clientY
+  startTranslateX.value = translateX.value
+  startTranslateY.value = translateY.value
+  event.currentTarget.style.cursor = 'grabbing'
+}
+
+const doPan = (event) => {
+  if (!isPanning.value) return
+  
+  const deltaX = event.clientX - startPanX.value
+  const deltaY = event.clientY - startPanY.value
+  
+  translateX.value = startTranslateX.value + deltaX
+  translateY.value = startTranslateY.value + deltaY
+}
+
+const endPan = () => {
+  isPanning.value = false
+  if (mapWrapper.value) {
+    mapWrapper.value.style.cursor = 'grab'
+  }
+}
+
+// Функции управления зумом
+const zoomIn = () => {
+  if (zoomLevel.value < 5) {
+    zoomLevel.value = Math.min(zoomLevel.value + 0.2, 5)
+  }
+}
+
+const zoomOut = () => {
+  if (zoomLevel.value > 0.1) {
+    zoomLevel.value = Math.max(zoomLevel.value - 0.2, 0.1)
+  }
+}
+
+const resetZoom = () => {
+  zoomLevel.value = 1
+  translateX.value = 0
+  translateY.value = 0
+}
+
+// Обновляем курсор при наведении
+onMounted(() => {
+  if (mapWrapper.value) {
+    mapWrapper.value.style.cursor = 'grab'
+  }
+})
 const sortedRegions = computed(() => {
   return [...regions.value].sort((a, b) => a.title.localeCompare(b.title))
 })
 
-// Функции экспорта (без изменений)
 const getSvgElement = () => {
   const wrapper = mapWrapper.value
   if (!wrapper) return null
@@ -235,7 +336,7 @@ const getSvgElement = () => {
 }
 
 const getSvgSize = (svgEl) => {
-  if (!svgEl) return { width: 1000, height: 600 }
+  if (!svgEl) return { width: 1000, height: 1000 }
   const viewBox = svgEl.getAttribute('viewBox')
   if (viewBox) {
     const parts = viewBox.split(/\s+/).map(Number)
@@ -244,7 +345,7 @@ const getSvgSize = (svgEl) => {
     }
   }
   const width = Number(svgEl.getAttribute('width')) || 1000
-  const height = Number(svgEl.getAttribute('height')) || 600
+  const height = Number(svgEl.getAttribute('height')) || 1000
   return { width, height }
 }
 
@@ -436,7 +537,6 @@ const convertDataCodeToId = (dataCode) => {
   return Object.keys(idToCodeMap).find(key => idToCodeMap[key] === dataCode) || null
 }
 
-// Вычисляемые свойства для легенды
 const legendMin = computed(() => {
   if (!heatmapActive.value || Object.keys(regionMetrics.value).length === 0) return '0'
   const values = Object.values(regionMetrics.value).map(m => m[selectedMetric.value] || 0)
@@ -449,7 +549,6 @@ const legendMax = computed(() => {
   return Math.max(...values).toFixed(0)
 })
 
-// Функция для получения цвета с повышенной контрастностью
 const getColorForValue = (value, min, max) => {
   if (value === 0 || min === max) return '#2D5A8C'
   const normalized = (value - min) / (max - min)
@@ -458,7 +557,6 @@ const getColorForValue = (value, min, max) => {
   return `hsl(${hue}, 80%, ${lightness}%)`
 }
 
-// Применение тепловой карты
 const applyHeatmap = async () => {
   if (!selectedMetric.value) return
   
@@ -497,7 +595,6 @@ const applyHeatmap = async () => {
   }
 }
 
-// Применение цветов к регионам
 const applyColorsToRegions = () => {
   const paths = mapWrapper.value.querySelectorAll('svg path[data-code]')
   const values = Object.values(regionMetrics.value)
@@ -517,7 +614,6 @@ const applyColorsToRegions = () => {
   })
 }
 
-// Сброс тепловой карты
 const clearHeatmap = () => {
   heatmapActive.value = false
   selectedMetric.value = ''
@@ -530,14 +626,12 @@ const clearHeatmap = () => {
   })
 }
 
-// Обновление тепловой карты
 const refreshHeatmap = () => {
   if (heatmapActive.value) {
     applyHeatmap()
   }
 }
 
-// Инициализация регионов
 onMounted(() => {
   const paths = mapWrapper.value.querySelectorAll('svg path[data-code]')
   regions.value = Array.from(paths).map(path => ({
@@ -557,7 +651,6 @@ onMounted(() => {
   })
 })
 
-// Показать название региона
 const showDistrict = (title) => {
   if (!isMapOpen.value) {
     const districtSpan = mapWrapper.value.querySelector('.district span')
@@ -567,7 +660,6 @@ const showDistrict = (title) => {
   }
 }
 
-// Скрыть название региона
 const hideDistrict = () => {
   if (!isMapOpen.value) {
     const district = mapWrapper.value.querySelector('.district')
@@ -575,7 +667,6 @@ const hideDistrict = () => {
   }
 }
 
-// Выбор региона с карты или списка
 const selectRegion = async (region, evt = null, pathEl = null) => {
   const dataCode = region.dataCode
   const id = convertDataCodeToId(dataCode)
@@ -597,12 +688,10 @@ const selectRegion = async (region, evt = null, pathEl = null) => {
   const rfMap = mapWrapper.value.querySelector('.rf-map')
   const paths = mapWrapper.value.querySelectorAll('[data-code]')
 
-  // Сбрасываем стили всех регионов
   paths.forEach(path => {
     path.classList.remove('dropfill', 'mainfill')
   })
 
-  // Применяем стили только к выбранному региону
   districtSpan.textContent = region.title
   district.style.display = 'block'
 
@@ -635,20 +724,63 @@ const selectRegion = async (region, evt = null, pathEl = null) => {
     regionCard.value = { visible: true, x, y }
   }
 
-  // Прокрутка списка до выбранного региона
   const regionItem = document.querySelector(`.region-item[data-code="${dataCode}"]`)
   if (regionItem) {
     regionItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }
 }
 
-// Выбор региона из списка
+
 const selectRegionFromList = (region) => {
   const pathEl = mapWrapper.value.querySelector(`svg path[data-code="${region.dataCode}"]`)
   selectRegion(region, null, pathEl)
 }
 
-// Закрытие региона
+// Функция для выбора региона по умолчанию
+const selectDefaultRegion = () => {
+  const moscow = regions.value.find(region => 
+    region.title === 'Москва' || region.dataCode === 'RU-MOW'
+  )
+  if (moscow) {
+    // Небольшая задержка для гарантии рендера SVG
+    setTimeout(() => {
+      selectRegionFromList(moscow)
+    }, 100)
+  }
+}
+const regionCardStyle = computed(() => {
+  // Предотвращаем деление на ноль
+  const invertedScale = 1 / (zoomLevel.value || 1);
+  return {
+    left: regionCard.value.x + 'px',
+    top: regionCard.value.y + 'px',
+    transform: `scale(${invertedScale})`,
+    transformOrigin: 'top left',
+  };
+});
+
+
+onMounted(() => {
+  const paths = mapWrapper.value.querySelectorAll('svg path[data-code]')
+  regions.value = Array.from(paths).map(path => ({
+    dataCode: path.getAttribute('data-code'),
+    title: path.getAttribute('data-title'),
+    id: convertDataCodeToId(path.getAttribute('data-code'))
+  }))
+  dataCodes.value = regions.value.map(region => region.dataCode)
+
+  paths.forEach(path => {
+    path.addEventListener('mouseenter', () => showDistrict(path.getAttribute('data-title')))
+    path.addEventListener('mouseleave', hideDistrict)
+    path.addEventListener('click', (evt) => {
+      const region = regions.value.find(r => r.dataCode === path.getAttribute('data-code'))
+      if (region) selectRegion(region, evt, path)
+    })
+  })
+  
+  // Выбираем Москву по умолчанию после инициализации
+  selectDefaultRegion()
+})
 const closeRegion = () => {
   isMapOpen.value = false
   selectedRegion.value = null
@@ -669,12 +801,10 @@ const closeRegion = () => {
   })
 }
 
-// Закрытие карточки
 const closeRegionCard = () => {
   regionCard.value = { visible: false, x: 0, y: 0 }
 }
 
-// Обновление метрик
 const refreshMetrics = async () => {
   if (!selectedRegion.value) return
   await selectRegion(selectedRegion.value)
@@ -682,15 +812,13 @@ const refreshMetrics = async () => {
 </script>
 
 <style scoped>
-/* Глобальные стили страницы */
 .topo-map {
   background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
-  padding: 32px 24px;
+  padding: 10px 10px;
   min-height: 100vh;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Контейнер контента */
 .content-wrapper {
   display: flex;
   gap: 24px;
@@ -703,7 +831,7 @@ const refreshMetrics = async () => {
 }
 .district {
   width: 100%;
-  height: 20px;
+  min-height: 20px;
 }
 
 .map-container {
@@ -720,7 +848,6 @@ const refreshMetrics = async () => {
   letter-spacing: -0.02em;
 }
 
-/* Стили для панели управления */
 .heatmap-controls {
   display: flex;
   align-items: center;
@@ -843,6 +970,24 @@ const refreshMetrics = async () => {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
 
 /* Стили карты */
 .rf-map,
@@ -884,7 +1029,6 @@ const refreshMetrics = async () => {
   opacity: 0.5;
 }
 
-/* Легенда тепловой карты */
 .heatmap-legend {
   position: fixed;
   bottom: 24px;
@@ -895,7 +1039,81 @@ const refreshMetrics = async () => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border: 1px solid #e5e7eb;
   min-width: 160px;
-  z-index: 1000; /* Добавлено для уверенности, что элемент будет поверх других */
+  z-index: 1000; 
+}
+
+.map-wrapper {
+  position: relative;
+  overflow: hidden;
+  cursor: grab;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.map-wrapper:active {
+  cursor: grabbing;
+}
+
+.rf-map {
+  transition: transform 0.1s ease-out;
+  will-change: transform;
+}
+
+.zoom-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.zoom-btn {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  min-width: 40px;
+}
+
+.zoom-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.zoom-btn:active {
+  background: #e5e7eb;
+}
+
+.zoom-indicator {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Адаптивные стили */
+@media (max-width: 768px) {
+  .zoom-controls {
+    order: -1;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .zoom-btn {
+    flex: 1;
+    max-width: 60px;
+  }
 }
 
 .legend-title {
@@ -934,7 +1152,6 @@ const refreshMetrics = async () => {
   text-align: right;
 }
 
-/* Карточка региона */
 .region-card {
   position: absolute;
   z-index: 20;
@@ -1047,7 +1264,6 @@ const refreshMetrics = async () => {
   background: linear-gradient(90deg, #2563eb, #4b8dfa);
 }
 
-/* Адаптивность */
 @media (max-width: 1024px) {
   .content-wrapper {
     flex-direction: column;
@@ -1089,4 +1305,3 @@ const refreshMetrics = async () => {
   }
 }
 </style>
-```
