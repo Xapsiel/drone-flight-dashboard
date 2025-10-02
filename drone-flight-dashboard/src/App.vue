@@ -157,11 +157,13 @@ const updateSortType = (newSortType) => {
 };
 
 // Обработчики изменения фильтров
-const onRegionChange = () => {
+const onRegionChange = (newRegionId) => {
+  selectedRegionId.value = newRegionId;
   applyFilters();
 };
 
-const onYearChange = () => {
+const onYearChange = (newYear) => {
+  selectedYear.value = newYear;
   applyFilters();
 };
 
