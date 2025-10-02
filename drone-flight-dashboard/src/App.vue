@@ -86,6 +86,8 @@ import AdminPage from './components/AdminPage.vue';
 import LoginPage from './components/LoginPage.vue';
 import authService from './services/auth.js';
 
+
+
 const currentView = ref('dashboard');
 const isLoading = ref(true);
 const isDataLoading = ref(false);
@@ -191,7 +193,7 @@ const fetchMetrics = async () => {
     
     // Если выбран конкретный регион, используем endpoint для одного региона
     if (selectedRegionId.value !== 'all') {
-      response = await axios.get('http://127.0.0.1:8080/metrics', {
+      response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/metrics`, {
         params: { 
           reg_id: selectedRegionId.value, 
           year: selectedYear.value 
@@ -205,7 +207,7 @@ const fetchMetrics = async () => {
       processMetricsData([singleRegionData]);
     } else {
       // Если выбран "Все регионы", используем старый endpoint
-      response = await axios.get('http://localhost:8080/metrics/all', {
+      response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/metrics/all`, {
         params: { year: selectedYear.value },
         headers: {
           Authorization: `Bearer ${token}`,

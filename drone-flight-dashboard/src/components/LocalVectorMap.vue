@@ -48,7 +48,7 @@ export default {
             localVector: {
               type: 'vector',
               tiles: [
-                'http://localhost:8080/tiles/{z}/{x}/{y}.mvt'
+                `${import.meta.env.VITE_BACKEND_URL}/tiles/{z}/{x}/{y}.mvt'`
               ],
               minzoom: 0,
               maxzoom: 14,
@@ -138,7 +138,7 @@ export default {
         const n = Math.pow(2, zoom)
         const x = Math.floor(((center.lng + 180) / 360) * n)
         const y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n)
-        const url = `http://localhost:8080/tiles/${zoom}/${x}/${y}.mvt`
+        const url = `${import.meta.env.VITE_BACKEND_URL}/tiles/${zoom}/${x}/${y}.mvt`
         axios.get(url, { responseType: 'arraybuffer', withCredentials: true })
           .then(res => {
             const buf = res.data

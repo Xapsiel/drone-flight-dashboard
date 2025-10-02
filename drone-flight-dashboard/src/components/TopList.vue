@@ -82,7 +82,7 @@ export default defineComponent({
         console.log('🏁 [TopList] Запрашиваем все метрики...');
         console.log('🏁 [TopList] Текущий критерий:', internalSortType.value);
 
-        const response = await axios.get('http://localhost:8080/metrics/all?year=2025', {
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/metrics/all?year=`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
